@@ -2,22 +2,21 @@ import * as tar from 'tar'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
 
-export function extractTarball(destFolder: string, tarball: string) {
-
+export async function extractTarball(destFolder: string, tarball: string) {
+  console.log('Extract ', destFolder, ' ', tarball)
   return tar.x({
     cwd: destFolder,
     file: tarball
   })
 }
 
-export function createTarBall(destFolder: string, destFile: string, filter: (path: string) => boolean) {
-
+export async function createTarBall(destFolder: string, destFile: string) {
+  console.log('Tar ', destFolder, ' ', destFile)
   return tar
     .c({
       file: destFile,
       cwd: destFolder,
-      gzip: true,
-      filter
+      gzip: true
     }, ['.'])
     .then(() => destFile)
 }

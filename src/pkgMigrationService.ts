@@ -46,9 +46,7 @@ export class PkgMigrationService {
 
     await this.buildPkg()
 
-    await this.checkBuildPkg()
-
-    await this.installPkg()
+    await this.checkBuildInstallPkg()
   }
 
   // pkg/installed
@@ -70,7 +68,7 @@ export class PkgMigrationService {
   private async deployPackages() {
     console.log('Start deploy')
     await Promise.all(this.packages.result.map(async (pkg : any) => {
-      const pkgPath = `./packages/${pkg.name}`
+      const pkgPath = `./packages/${pkg.name}.tar.gz`
 
       const formData = new FormData()
       formData.set('source', await fileFromPath(pkgPath))
@@ -79,11 +77,10 @@ export class PkgMigrationService {
       formData.set('metadata', JSON.stringify(pkg.metadata))
 
       console.log('Deploy ', pkg.name)
-      const deployedPackage : any = await this.destApiRequest.post(`/pkg/source/${pkg.name}`, formData)
+      const { result }  : any = await this.destApiRequest.post(`/pkg/source/${pkg.name}`, formData, true)
+      console.log('Deploy result ', result)
+      const { name, hash } = result
 
-      const { name, hash } = deployedPackage
-
-      console.log('Deploy result ', deployedPackage)
       if (name && hash) {
         pkg.newHash = hash
         logger.log({
@@ -107,8 +104,8 @@ export class PkgMigrationService {
       }
 
       console.log('Build ', pkg.name)
-      const { result } : any = await this.destApiRequest.post('/pkg/build', body)
-
+      const { result } : any = await this.destApiRequest.post('/pkgr/build', body)
+      console.log('Build result ', result)
       const { id: buildId } = result
 
       pkg.buildId = buildId
@@ -121,11 +118,11 @@ export class PkgMigrationService {
     console.log('End build')
   }
 
-  private checkBuildPkg() {
+  private async checkBuildInstallPkg() {
     let checkCount = 0
     const checkBuild = setInterval(async () => {
       console.log('Start check build ', checkCount)
-      await Promise.all(this.packages.result.map(async (pkg : any) => {
+      await Promise.all(this.packages.result.filter((pkg : any) => (!pkg.checkTime && pkg.checkTime < 3) || !pkg.passed).map(async (pkg : any) => {
         if (!pkg.checkTime) {
           pkg.checkTime = 0
         }
@@ -136,6 +133,10 @@ export class PkgMigrationService {
         if (status == 'Passed') {
           pkg.passed = true
           checkCount++
+
+          console.log('Install ', pkg.name)
+          const result = await this.destApiRequest.post(`/pkgr/build/install/${pkg.buildId}`)
+          console.log('Install result ', result)
         }
 
         if (pkg.checkTime == 3 || status == 'Failed') {
@@ -148,7 +149,7 @@ export class PkgMigrationService {
         }
 
 
-        if (checkCount == this.packages.size) {
+        if (checkCount >= this.packages.result.length) {
           clearInterval(checkBuild)
         }
       }))
@@ -156,20 +157,10 @@ export class PkgMigrationService {
     }, 1000 * 60)
   }
 
-
   private async getBuildStatus(id: string) {
     const { result } : any = await this.destApiRequest.get(`/pkg/builds/${id}`)
 
     return result
-  }
-
-  private async installPkg() {
-    console.log('Start install')
-    await Promise.all(this.packages.result.map(async (pkg : any) => {
-      console.log('Install ', pkg.name)
-      await this.destApiRequest.post(`/pkgr/build/install/${pkg.buildId}`)
-    }))
-    console.log('End install')
   }
 }
 
