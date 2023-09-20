@@ -35,6 +35,9 @@ jobs:
   migration:
       runs-on: ubuntu-latest
       steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          
         - name: Migrate ${{ github.event.inputs.ORIGIN_ORG_NAME }} to ${{ github.event.inputs.DEST_ORG_NAME }}
           uses: ./
           with:
