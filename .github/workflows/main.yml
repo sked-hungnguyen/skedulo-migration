@@ -1,5 +1,5 @@
 name: Skedulo Enviroment Migration
-run-name: ${{ github.actor }} trigger migration
+
 on:
   workflow_dispatch:
     inputs:
@@ -16,6 +16,7 @@ on:
         description: "Origin Org Name"
         type: string
         required: false
+        default: "A"
       DEST_API_SERVER:
         description: "Destination API server"
         type: string
@@ -29,14 +30,19 @@ on:
         description: "Destination Org Name"
         type: string
         required: false
+        default: "B"        
 jobs:
   migration:
-    uses: sked-hungnguyen/skedulo-migration
-    with:
-      ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
-      ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
-      ORIGIN_ORG_NAME: ${{ github.event.inputs.ORIGIN_ORG_NAME }}
-      DEST_API_SERVER: ${{ github.event.inputs.DEST_API_SERVER }}
-      DEST_TOKEN: ${{ github.event.inputs.DEST_TOKEN }}
-      DEST_ORG_NAME: ${{ github.event.inputs.DEST_ORG_NAME }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Migrate ${{ github.event.inputs.ORIGIN_ORG_NAME }} to ${{ github.event.inputs.DEST_ORG_NAME }}
+          uses: ./
+          with:
+            ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
+            ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
+            ORIGIN_ORG_NAME: ${{ github.event.inputs.ORIGIN_ORG_NAME }}
+            DEST_API_SERVER: ${{ github.event.inputs.DEST_API_SERVER }}
+            DEST_TOKEN: ${{ github.event.inputs.DEST_TOKEN }}
+            DEST_ORG_NAME: ${{ github.event.inputs.DEST_ORG_NAME }}
+      
     
