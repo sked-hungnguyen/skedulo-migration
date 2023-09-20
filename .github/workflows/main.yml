@@ -7,7 +7,7 @@ on:
         description: "Origin API server"
         type: string
         required: true
-        default: "https://api.skedulo.com/"
+        default: "https://api.skedulo.com"
       ORIGIN_TOKEN:
         description: "Origin API Token"
         type: string
@@ -21,7 +21,7 @@ on:
         description: "Destination API server"
         type: string
         required: true
-        default: "https://api.skedulo.com/"
+        default: "https://api.skedulo.com"
       DEST_TOKEN:
         description: "Destination API Token"
         type: string
