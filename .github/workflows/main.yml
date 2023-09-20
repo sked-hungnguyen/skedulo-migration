@@ -31,7 +31,7 @@ on:
         required: false
 jobs:
   skedulo-env-migration:
-    uses: sked-hungnguyen/skedulo-migration@main
+    uses: ./
     with:
           ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
           ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
