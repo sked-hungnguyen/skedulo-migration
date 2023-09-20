@@ -1,0 +1,24 @@
+name: 'Skedulo Migration'
+description: 'Skedulo Migration Actions'
+inputs:
+  ORIGIN_API_SERVER:
+    description: 'Origin API Server'
+    required: true
+  ORIGIN_TOKEN:
+    description: 'Origin Token'
+    required: true
+  ORIGIN_ORG_NAME:
+    description: 'Origin Org Name'
+    required: false
+  DEST_API_SERVER:
+    description: 'Origin API Server'
+    required: true
+  DEST_TOKEN:
+    description: 'Origin Token'
+    required: true
+  DEST_ORG_NAME:
+    description: 'Origin Org Name'
+    required: false
+runs:
+  using: node16
+  main: 'dist/index.js'

@@ -29835,8 +29835,7 @@ class PkgMigrationService {
             yield this.downloadPackages();
             yield this.deployPackages();
             yield this.buildPkg();
-            yield this.checkBuildPkg();
-            yield this.installPkg();
+            yield this.checkBuildInstallPkg();
         });
     }
     // pkg/installed
@@ -29868,9 +29867,9 @@ class PkgMigrationService {
                 formData.set('hash', (0, tar_1.getFileHash)(pkgPath));
                 formData.set('metadata', JSON.stringify(pkg.metadata));
                 console.log('Deploy ', pkg.name);
-                const deployedPackage = yield this.destApiRequest.post(`/pkg/source/${pkg.name}`, formData);
-                const { name, hash } = deployedPackage;
-                console.log('Deploy result ', deployedPackage);
+                const { result } = yield this.destApiRequest.post(`/pkg/source/${pkg.name}`, formData, true);
+                console.log('Deploy result ', result);
+                const { name, hash } = result;
                 if (name && hash) {
                     pkg.newHash = hash;
                     logger.log({
@@ -29893,7 +29892,8 @@ class PkgMigrationService {
                     action: 'deploy'
                 };
                 console.log('Build ', pkg.name);
-                const { result } = yield this.destApiRequest.post('/pkg/build', body);
+                const { result } = yield this.destApiRequest.post('/pkgr/build', body);
+                console.log('Build result ', result);
                 const { id: buildId } = result;
                 pkg.buildId = buildId;
                 logger.log({
@@ -29904,50 +29904,45 @@ class PkgMigrationService {
             console.log('End build');
         });
     }
-    checkBuildPkg() {
-        let checkCount = 0;
-        const checkBuild = setInterval(() => __awaiter(this, void 0, void 0, function* () {
-            console.log('Start check build ', checkCount);
-            yield Promise.all(this.packages.result.map((pkg) => __awaiter(this, void 0, void 0, function* () {
-                if (!pkg.checkTime) {
-                    pkg.checkTime = 0;
-                }
-                pkg.checkTime += 1;
-                console.log('Check build ', pkg.name, ' - ', pkg.checkTime);
-                const { status } = yield this.getBuildStatus(pkg.buildId);
-                console.log(`running interval check - ${pkg.name} build status is`, status);
-                if (status == 'Passed') {
-                    pkg.passed = true;
-                    checkCount++;
-                }
-                if (pkg.checkTime == 3 || status == 'Failed') {
-                    logger.log({
-                        level: 'error',
-                        message: `${this.destAuthorizeData.ORG_NAME} ${pkg.name} build failed!`
-                    });
-                    checkCount++;
-                }
-                if (checkCount == this.packages.size) {
-                    clearInterval(checkBuild);
-                }
-            })));
-            console.log('End check build ', checkCount);
-        }), 1000 * 60);
+    checkBuildInstallPkg() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let checkCount = 0;
+            const checkBuild = setInterval(() => __awaiter(this, void 0, void 0, function* () {
+                console.log('Start check build ', checkCount);
+                yield Promise.all(this.packages.result.filter((pkg) => (!pkg.checkTime && pkg.checkTime < 3) || !pkg.passed).map((pkg) => __awaiter(this, void 0, void 0, function* () {
+                    if (!pkg.checkTime) {
+                        pkg.checkTime = 0;
+                    }
+                    pkg.checkTime += 1;
+                    console.log('Check build ', pkg.name, ' - ', pkg.checkTime);
+                    const { status } = yield this.getBuildStatus(pkg.buildId);
+                    console.log(`running interval check - ${pkg.name} build status is`, status);
+                    if (status == 'Passed') {
+                        pkg.passed = true;
+                        checkCount++;
+                        console.log('Install ', pkg.name);
+                        const result = yield this.destApiRequest.post(`/pkgr/build/install/${pkg.buildId}`);
+                        console.log('Install result ', result);
+                    }
+                    if (pkg.checkTime == 3 || status == 'Failed') {
+                        logger.log({
+                            level: 'error',
+                            message: `${this.destAuthorizeData.ORG_NAME} ${pkg.name} build failed!`
+                        });
+                        checkCount++;
+                    }
+                    if (checkCount >= this.packages.result.length) {
+                        clearInterval(checkBuild);
+                    }
+                })));
+                console.log('End check build ', checkCount);
+            }), 1000 * 60);
+        });
     }
     getBuildStatus(id) {
         return __awaiter(this, void 0, void 0, function* () {
             const { result } = yield this.destApiRequest.get(`/pkg/builds/${id}`);
             return result;
-        });
-    }
-    installPkg() {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log('Start install');
-            yield Promise.all(this.packages.result.map((pkg) => __awaiter(this, void 0, void 0, function* () {
-                console.log('Install ', pkg.name);
-                yield this.destApiRequest.post(`/pkgr/build/install/${pkg.buildId}`);
-            })));
-            console.log('End install');
         });
     }
 }
@@ -29977,19 +29972,15 @@ const fs = __nccwpck_require__(7561);
 const zlib = __nccwpck_require__(5628);
 const { promisify } = __nccwpck_require__(3837);
 const { pipeline } = __nccwpck_require__(2781);
+const tar_1 = __nccwpck_require__(9796);
 class Fetch {
     constructor(authorizeData) {
         this.authorizeData = authorizeData;
-        this.getRequestOptions = (method, body = {}) => ({
-            method,
-            headers: {
-                Authorization: 'Bearer ' + this.authorizeData.TOKEN
-            },
-            body: method !== 'GET' ? body : undefined
-        });
+        this.isFormData = false;
     }
-    post(urlPath, body = {}) {
+    post(urlPath, body = {}, isFormData = false) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.isFormData = isFormData;
             return this.request('POST', urlPath, body);
         });
     }
@@ -30001,20 +29992,39 @@ class Fetch {
     getFile(urlPath, pkgName) {
         return __awaiter(this, void 0, void 0, function* () {
             const srcPath = './packages';
-            yield fs.mkdirSync(srcPath, { recursive: true });
+            yield fs.mkdirSync(`${srcPath}/tmp/tar`, { recursive: true });
             const gzip = yield zlib.createGzip();
-            // await fetch(this.authorizeData.API_SERVER + urlPath, this.getRequestOptions('GET')).then(res => {
-            //    res.body?.pipe(gzip).pipe(fs.createWriteStream(`${srcPath}/${pkgName}`));
-            // })
             const response = yield (0, node_fetch_1.default)(this.authorizeData.API_SERVER + urlPath, this.getRequestOptions('GET'));
             const streamPipeline = promisify(pipeline);
-            yield streamPipeline(response.body, gzip, fs.createWriteStream(`${srcPath}/${pkgName}`));
+            // keep hash data
+            //await streamPipeline(response.body, gzip, fs.createWriteStream(`${srcPath}/${pkgName}`))
+            // new hash data
+            yield streamPipeline(response.body, fs.createWriteStream(`${srcPath}/tmp/tar/${pkgName}`));
+            yield (0, tar_1.extractTarball)(`${srcPath}/tmp`, `${srcPath}/tmp/tar/${pkgName}`),
+                yield (0, tar_1.createTarBall)(`${srcPath}/tmp/${pkgName}`, `${srcPath}/${pkgName}`);
         });
     }
     request(method, urlPath, body = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return (0, node_fetch_1.default)(this.authorizeData.API_SERVER + urlPath, this.getRequestOptions(method, body)).then(res => res.json());
+            const options = this.getRequestOptions(method, body);
+            return yield (0, node_fetch_1.default)(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json());
         });
+    }
+    getRequestOptions(method, body = {}) {
+        const options = {
+            method,
+            headers: {
+                Authorization: 'Bearer ' + this.authorizeData.TOKEN
+            }
+        };
+        if (method === 'POST') {
+            options.body = body;
+            if (!this.isFormData) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+        }
+        return options;
     }
 }
 exports.Fetch = Fetch;
@@ -30023,31 +30033,45 @@ exports.Fetch = Fetch;
 /***/ }),
 
 /***/ 9796:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getFileHash = exports.createTarBall = exports.extractTarball = void 0;
 const tar = __nccwpck_require__(4674);
 const crypto = __nccwpck_require__(6113);
 const fs = __nccwpck_require__(7147);
 function extractTarball(destFolder, tarball) {
-    return tar.x({
-        cwd: destFolder,
-        file: tarball
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('Extract ', destFolder, ' ', tarball);
+        return tar.x({
+            cwd: destFolder,
+            file: tarball
+        });
     });
 }
 exports.extractTarball = extractTarball;
-function createTarBall(destFolder, destFile, filter) {
-    return tar
-        .c({
-        file: destFile,
-        cwd: destFolder,
-        gzip: true,
-        filter
-    }, ['.'])
-        .then(() => destFile);
+function createTarBall(destFolder, destFile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('Tar ', destFolder, ' ', destFile);
+        return tar
+            .c({
+            file: destFile,
+            cwd: destFolder,
+            gzip: true
+        }, ['.'])
+            .then(() => destFile);
+    });
 }
 exports.createTarBall = createTarBall;
 function getFileHash(file) {

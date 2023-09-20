@@ -26,26 +26,38 @@ export class Fetch {
 
   async getFile(urlPath: string, pkgName: string) {
     const srcPath = './packages'
-    await fs.mkdirSync(srcPath, { recursive: true })
+    await fs.mkdirSync(`${srcPath}/tmp/tar`, { recursive: true })
 
     const gzip = await zlib.createGzip()
 
     const response = await fetch(this.authorizeData.API_SERVER + urlPath, this.getRequestOptions('GET'))
 
     const streamPipeline = promisify(pipeline)
+    // keep hash data
     //await streamPipeline(response.body, gzip, fs.createWriteStream(`${srcPath}/${pkgName}`))
 
+    // new hash data
     await streamPipeline(
       response.body,
-      fs.createWriteStream(`${srcPath}/${pkgName}.tar`)
+      fs.createWriteStream(`${srcPath}/tmp/tar/${pkgName}`)
     )
-
-    await extractTarball(`${srcPath}`, `${srcPath}/${pkgName}.tar`),
-    await createTarBall(`${srcPath}/${pkgName}`, `${srcPath}/${pkgName}.tar.gz`)
+    await extractTarball(`${srcPath}/tmp`, `${srcPath}/tmp/tar/${pkgName}`),
+    await createTarBall(`${srcPath}/tmp/${pkgName}`, `${srcPath}/${pkgName}`)
   }
 
   private async request(method: string, urlPath: string, body: object = {}) {
-    const options : any = this.getRequestOptions(method, body)
+    const options = this.getRequestOptions(method, body)
+    return await fetch(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json())
+  }
+
+  private getRequestOptions(method: string, body: object = {}) {
+    const options : { [key: string]: any } = {
+      method,
+      headers: {
+        Authorization: 'Bearer ' + this.authorizeData.TOKEN
+      }
+    }
+
     if (method === 'POST') {
       options.body = body
       if (!this.isFormData) {
@@ -53,13 +65,6 @@ export class Fetch {
         options.body = JSON.stringify(body)
       }
     }
-    return await fetch(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json())
+    return options
   }
-
-  private getRequestOptions = (method: string, body: object = {}) => ({
-    method,
-    headers: {
-      Authorization: 'Bearer ' + this.authorizeData.TOKEN
-    }
-  })
 }

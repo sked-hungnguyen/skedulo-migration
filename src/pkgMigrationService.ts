@@ -68,7 +68,7 @@ export class PkgMigrationService {
   private async deployPackages() {
     console.log('Start deploy')
     await Promise.all(this.packages.result.map(async (pkg : any) => {
-      const pkgPath = `./packages/${pkg.name}.tar.gz`
+      const pkgPath = `./packages/${pkg.name}`
 
       const formData = new FormData()
       formData.set('source', await fileFromPath(pkgPath))
