@@ -1,6 +1,6 @@
-# Skedulo Action Deploy Packages
+# Skedulo Action Migrate Enviroment
 
-This action clone Skedulo packages to another enviroment. You need to get api server url / api token.
+This action migrate Skedulo packages to another enviroment. You need to get api server url / api token.
 
 ## Inputs
 
