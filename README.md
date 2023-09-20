@@ -1,6 +1,6 @@
 # Skedulo Action Deploy Packages
 
-This action bundle and deploy Packages to Skedulo Platform. You need to build packages first then upload to artifact.
+This action clone Skedulo packages to another enviroment. You need to get api server url / api token.
 
 ## Inputs
 
