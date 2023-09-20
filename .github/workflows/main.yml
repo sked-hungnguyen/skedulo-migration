@@ -1,0 +1,42 @@
+name: Skedulo Enviroment Migration
+run-name: ${{ github.actor }} trigger migration
+on:
+  workflow_dispatch:
+    inputs:
+      ORIGIN_API_SERVER:
+        description: "Origin API server"
+        type: string
+        required: true
+        default: "https://api.skedulo.com/"
+      ORIGIN_TOKEN:
+        description: "Origin API Token"
+        type: string
+        required: true
+      ORIGIN_ORG_NAME:
+        description: "Origin Org Name"
+        type: string
+        required: false
+      DEST_API_SERVER:
+        description: "Destination API server"
+        type: string
+        required: true
+        default: "https://api.skedulo.com/"
+      DEST_TOKEN:
+        description: "Destination API Token"
+        type: string
+        required: true
+      DEST_ORG_NAME:
+        description: "Destination Org Name"
+        type: string
+        required: false
+jobs:
+  skedulo-env-migration:
+    uses: sked-hungnguyen/skedulo-migration@main
+    with:
+          ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
+          ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
+          ORIGIN_ORG_NAME: ${{ github.event.inputs.ORIGIN_ORG_NAME }}
+          DEST_API_SERVER: ${{ github.event.inputs.DEST_API_SERVER }}
+          DEST_TOKEN: ${{ github.event.inputs.DEST_TOKEN }}
+          DEST_ORG_NAME: ${{ github.event.inputs.DEST_ORG_NAME }}
+    
