@@ -30,13 +30,13 @@ on:
         type: string
         required: false
 jobs:
-  skedulo-env-migration:
+  migration:
     uses: ./
     with:
-          ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
-          ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
-          ORIGIN_ORG_NAME: ${{ github.event.inputs.ORIGIN_ORG_NAME }}
-          DEST_API_SERVER: ${{ github.event.inputs.DEST_API_SERVER }}
-          DEST_TOKEN: ${{ github.event.inputs.DEST_TOKEN }}
-          DEST_ORG_NAME: ${{ github.event.inputs.DEST_ORG_NAME }}
+      ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
+      ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
+      ORIGIN_ORG_NAME: ${{ github.event.inputs.ORIGIN_ORG_NAME }}
+      DEST_API_SERVER: ${{ github.event.inputs.DEST_API_SERVER }}
+      DEST_TOKEN: ${{ github.event.inputs.DEST_TOKEN }}
+      DEST_ORG_NAME: ${{ github.event.inputs.DEST_ORG_NAME }}
     
