@@ -41,8 +41,8 @@ export class Fetch {
       response.body,
       fs.createWriteStream(`${srcPath}/tmp/tar/${pkgName}`)
     )
-    await extractTarball(`${srcPath}/tmp`, `${srcPath}/tmp/tar/${pkgName}`),
-    await createTarBall(`${srcPath}/tmp/${pkgName}`, `${srcPath}/${pkgName}`)
+    await extractTarball(`${srcPath}/tmp/extract/${pkgName}`, `${srcPath}/tmp/tar/${pkgName}`),
+    await createTarBall(`${srcPath}/tmp/extract/${pkgName}`, `${srcPath}/${pkgName}`)
   }
 
   private async request(method: string, urlPath: string, body: object = {}) {

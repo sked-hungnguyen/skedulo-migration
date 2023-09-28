@@ -3,6 +3,7 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 
 export async function extractTarball(destFolder: string, tarball: string) {
+  await fs.mkdirSync(destFolder, { recursive: true })
   console.log('Extract ', destFolder, ' ', tarball)
   return tar.x({
     cwd: destFolder,
