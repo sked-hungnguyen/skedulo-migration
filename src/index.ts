@@ -1,5 +1,5 @@
 import { AuthorizeData } from "./migrationService/serviceBase";
-import { PkgMigrationService } from "./migrationService/package";
+import { Package } from "./migrationService/package";
 import * as dotenv from "dotenv";
 import * as core from "@actions/core";
 
@@ -28,7 +28,7 @@ async function migrationPackages() {
 
   const targetAuthorizeData: AuthorizeData = {
     TOKEN:
-      process.env.DEST_TOKEN || core.getInput("TARGET_TOKEN") || "",
+      process.env.TARGET_TOKEN || core.getInput("TARGET_TOKEN") || "",
     API_SERVER:
       getAPIServer(process.env.TARGET_API_SERVER ||
         core.getInput("TARGET_API_SERVER") ||
@@ -36,7 +36,7 @@ async function migrationPackages() {
     ORG_NAME: process.env.TARGET_ORG_NAME || core.getInput("TARGET_ORG_NAME") || "Testing",
   }
 
-  return await (new PkgMigrationService(sourceAuthorizeData, targetAuthorizeData)).migration()
+  return await (new Package(sourceAuthorizeData, targetAuthorizeData)).migration()
 
 }
 

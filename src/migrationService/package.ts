@@ -3,7 +3,7 @@ import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
 import { ServiceBase } from './serviceBase'
 
-export class PkgMigrationService extends ServiceBase {
+export class Package extends ServiceBase {
   private packages : any
 
   async migration() {
