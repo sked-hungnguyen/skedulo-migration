@@ -29761,21 +29761,21 @@ const getAPIServer = (url) => {
 };
 function migrationPackages() {
     return __awaiter(this, void 0, void 0, function* () {
-        const originAuthorizeData = {
-            TOKEN: process.env.ORIGIN_TOKEN || core.getInput("ORIGIN_TOKEN") || "",
-            API_SERVER: getAPIServer(process.env.ORIGIN_API_SERVER ||
-                core.getInput("ORIGIN_API_SERVER") ||
+        const sourceAuthorizeData = {
+            TOKEN: process.env.SOURCE_TOKEN || core.getInput("SOURCE_TOKEN") || "",
+            API_SERVER: getAPIServer(process.env.SOURCE_API_SERVER ||
+                core.getInput("SOURCE_API_SERVER") ||
                 "https://api.skedulo.com/"),
-            ORG_NAME: process.env.ORIGIN_ORG_NAME || core.getInput("ORIGIN_ORG_NAME") || "Testing",
+            ORG_NAME: process.env.SOURCE_ORG_NAME || core.getInput("SOURCE_ORG_NAME") || "Testing",
         };
-        const destAuthorizeData = {
-            TOKEN: process.env.DEST_TOKEN || core.getInput("DEST_TOKEN") || "",
-            API_SERVER: getAPIServer(process.env.DEST_API_SERVER ||
-                core.getInput("DEST_API_SERVER") ||
+        const targetAuthorizeData = {
+            TOKEN: process.env.TARGET_TOKEN || core.getInput("TARGET_TOKEN") || "",
+            API_SERVER: getAPIServer(process.env.TARGET_API_SERVER ||
+                core.getInput("TARGET_API_SERVER") ||
                 "https://api.skedulo.com/"),
-            ORG_NAME: process.env.DEST_ORG_NAME || core.getInput("DEST_ORG_NAME") || "Testing",
+            ORG_NAME: process.env.TARGET_ORG_NAME || core.getInput("TARGET_ORG_NAME") || "Testing",
         };
-        return yield (new pkgMigrationService_1.PkgMigrationService(originAuthorizeData, destAuthorizeData)).migration();
+        return yield (new pkgMigrationService_1.PkgMigrationService(sourceAuthorizeData, targetAuthorizeData)).migration();
     });
 }
 (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -30000,8 +30000,8 @@ class Fetch {
             //await streamPipeline(response.body, gzip, fs.createWriteStream(`${srcPath}/${pkgName}`))
             // new hash data
             yield streamPipeline(response.body, fs.createWriteStream(`${srcPath}/tmp/tar/${pkgName}`));
-            yield (0, tar_1.extractTarball)(`${srcPath}/tmp`, `${srcPath}/tmp/tar/${pkgName}`),
-                yield (0, tar_1.createTarBall)(`${srcPath}/tmp/${pkgName}`, `${srcPath}/${pkgName}`);
+            yield (0, tar_1.extractTarball)(`${srcPath}/tmp/extract/${pkgName}`, `${srcPath}/tmp/tar/${pkgName}`),
+                yield (0, tar_1.createTarBall)(`${srcPath}/tmp/extract/${pkgName}`, `${srcPath}/${pkgName}`);
         });
     }
     request(method, urlPath, body = {}) {
@@ -30053,6 +30053,7 @@ const crypto = __nccwpck_require__(6113);
 const fs = __nccwpck_require__(7147);
 function extractTarball(destFolder, tarball) {
     return __awaiter(this, void 0, void 0, function* () {
+        yield fs.mkdirSync(destFolder, { recursive: true });
         console.log('Extract ', destFolder, ' ', tarball);
         return tar.x({
             cwd: destFolder,
