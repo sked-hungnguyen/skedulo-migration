@@ -1,0 +1,18 @@
+import { AuthorizeBase } from './serviceBase'
+
+export class OrgPreference extends AuthorizeBase {
+    private preference : any
+
+    async migration() {
+        this.preference = await this.getSourcePreference()
+    }
+
+    // config/preference
+    private async getSourcePreference() {
+        return await this.sourceApiRequest.get('/config/preference')
+    }
+
+    private async setTargetPreference() {
+        return await this.targetApiRequest.post('/config/preference', this.preference)
+    }
+}

@@ -24,8 +24,7 @@ export class Fetch {
     return this.request('GET', urlPath)
   }
 
-  async getFile(urlPath: string, pkgName: string) {
-    const srcPath = './packages'
+  async getFile(urlPath: string, pkgName: string, srcPath: string = './packages') {
     await fs.mkdirSync(`${srcPath}/tmp/tar`, { recursive: true })
 
     const gzip = await zlib.createGzip()

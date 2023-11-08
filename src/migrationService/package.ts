@@ -1,38 +1,10 @@
-import * as fs from 'fs'
-import * as path from 'path'
-
-import { getFileHash, createTarBall } from './utils/tar'
-
-import * as winston from 'winston'
-
-import { Fetch } from './utils/fetch'
+import { getFileHash } from '../utils/tar'
 import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
+import { ServiceBase } from './serviceBase'
 
-const logger = winston.createLogger({
-  format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' }),
-  ]
-});
-
-export interface AuthorizeData {
-  TOKEN: string
-  API_SERVER: string
-  ORG_NAME: string
-}
-
-export class PkgMigrationService {
-  private originApiRequest = new Fetch(this.originAuthorizeData)
-  private destApiRequest = new Fetch(this.destAuthorizeData)
-
+export class PkgMigrationService extends ServiceBase {
   private packages : any
-
-  constructor(public originAuthorizeData: AuthorizeData, private destAuthorizeData: AuthorizeData) {
-
-  }
 
   async migration() {
 
@@ -51,7 +23,7 @@ export class PkgMigrationService {
 
   // pkg/installed
   private async getPackages() {
-    return await this.originApiRequest.get('/pkg/installed')
+    return await this.sourceApiRequest.get('/pkg/installed')
   }
 
   // pkg/source/:name/:hash
@@ -59,7 +31,7 @@ export class PkgMigrationService {
     console.log('Start download')
     await Promise.all(this.packages.result.map(async (pkg : any) => {
       console.log('Download', pkg.name)
-      await this.originApiRequest.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, pkg.name)
+      await this.sourceApiRequest.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, pkg.name)
     }))
     console.log('End downdoad')
   }
@@ -77,15 +49,15 @@ export class PkgMigrationService {
       formData.set('metadata', JSON.stringify(pkg.metadata))
 
       console.log('Deploy ', pkg.name)
-      const { result }  : any = await this.destApiRequest.post(`/pkg/source/${pkg.name}`, formData, true)
+      const { result }  : any = await this.targetApiRequest.post(`/pkg/source/${pkg.name}`, formData, true)
       console.log('Deploy result ', result)
       const { name, hash } = result
 
       if (name && hash) {
         pkg.newHash = hash
-        logger.log({
+        this.logger.log({
           level: 'info',
-          message: `${this.destAuthorizeData.ORG_NAME} ${name} Upload success!`
+          message: `${this.targetAuthorizeData.ORG_NAME} ${name} Upload success!`
         })
       }
     }))
@@ -104,15 +76,15 @@ export class PkgMigrationService {
       }
 
       console.log('Build ', pkg.name)
-      const { result } : any = await this.destApiRequest.post('/pkgr/build', body)
+      const { result } : any = await this.targetApiRequest.post('/pkgr/build', body)
       console.log('Build result ', result)
       const { id: buildId } = result
 
       pkg.buildId = buildId
 
-      logger.log({
+      this.logger.log({
         level: 'info',
-        message: `${this.destAuthorizeData.ORG_NAME} ${pkg.name} startBuild success!`
+        message: `${this.targetAuthorizeData.ORG_NAME} ${pkg.name} startBuild success!`
       })
     }))
     console.log('End build')
@@ -135,14 +107,14 @@ export class PkgMigrationService {
           checkCount++
 
           console.log('Install ', pkg.name)
-          const result = await this.destApiRequest.post(`/pkgr/build/install/${pkg.buildId}`)
+          const result = await this.targetApiRequest.post(`/pkgr/build/install/${pkg.buildId}`)
           console.log('Install result ', result)
         }
 
         if (pkg.checkTime == 3 || status == 'Failed') {
-          logger.log({
+          this.logger.log({
             level: 'error',
-            message: `${this.destAuthorizeData.ORG_NAME} ${pkg.name} build failed!`
+            message: `${this.targetAuthorizeData.ORG_NAME} ${pkg.name} build failed!`
           })
 
           checkCount++
@@ -158,7 +130,7 @@ export class PkgMigrationService {
   }
 
   private async getBuildStatus(id: string) {
-    const { result } : any = await this.destApiRequest.get(`/pkg/builds/${id}`)
+    const { result } : any = await this.targetApiRequest.get(`/pkg/builds/${id}`)
 
     return result
   }
