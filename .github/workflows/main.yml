@@ -3,49 +3,49 @@ name: Skedulo Enviroment Migration
 on:
   workflow_dispatch:
     inputs:
-      ORIGIN_API_SERVER:
-        description: "Origin API server"
+      SOURCE_API_SERVER:
+        description: "Source API server"
         type: string
         required: true
         default: "https://api.skedulo.com"
-      ORIGIN_TOKEN:
-        description: "Origin API Token"
+      SOURCE_TOKEN:
+        description: "Source API Token"
         type: string
         required: true
-      ORIGIN_ORG_NAME:
-        description: "Origin Org Name"
+      SOURCE_ORG_NAME:
+        description: "Source Org Name"
         type: string
         required: false
         default: "A"
-      DEST_API_SERVER:
-        description: "Destination API server"
+      TARGET_API_SERVER:
+        description: "Target API server"
         type: string
         required: true
         default: "https://api.skedulo.com"
-      DEST_TOKEN:
-        description: "Destination API Token"
+      TARGET_TOKEN:
+        description: "Target API Token"
         type: string
         required: true
-      DEST_ORG_NAME:
-        description: "Destination Org Name"
+      TARGET_ORG_NAME:
+        description: "Target Org Name"
         type: string
         required: false
-        default: "B"        
+        default: "B"
 jobs:
   migration:
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
           uses: actions/checkout@v4
-          
-        - name: Migrate ${{ github.event.inputs.ORIGIN_ORG_NAME }} to ${{ github.event.inputs.DEST_ORG_NAME }}
+
+        - name: Migrate ${{ github.event.inputs.SOURCE_ORG_NAME }} to ${{ github.event.inputs.TARGET_ORG_NAME }}
           uses: ./
           with:
-            ORIGIN_API_SERVER: ${{ github.event.inputs.ORIGIN_API_SERVER }}
-            ORIGIN_TOKEN: ${{ github.event.inputs.ORIGIN_TOKEN }}
-            ORIGIN_ORG_NAME: ${{ github.event.inputs.ORIGIN_ORG_NAME }}
-            DEST_API_SERVER: ${{ github.event.inputs.DEST_API_SERVER }}
-            DEST_TOKEN: ${{ github.event.inputs.DEST_TOKEN }}
-            DEST_ORG_NAME: ${{ github.event.inputs.DEST_ORG_NAME }}
-      
-    
+            SOURCE_API_SERVER: ${{ github.event.inputs.SOURCE_API_SERVER }}
+            SOURCE_TOKEN: ${{ github.event.inputs.SOURCE_TOKEN }}
+            SOURCE_ORG_NAME: ${{ github.event.inputs.SOURCE_ORG_NAME }}
+            TARGET_API_SERVER: ${{ github.event.inputs.TARGET_API_SERVER }}
+            TARGET_TOKEN: ${{ github.event.inputs.TARGET_TOKEN }}
+            TARGET_ORG_NAME: ${{ github.event.inputs.TARGET_ORG_NAME }}
+
+

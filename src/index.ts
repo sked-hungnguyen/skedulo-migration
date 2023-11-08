@@ -15,27 +15,27 @@ const getAPIServer = (url: string) => {
 
 async function migrationPackages() {
 
-  const originAuthorizeData: AuthorizeData = {
+  const sourceAuthorizeData: AuthorizeData = {
     TOKEN:
-      process.env.ORIGIN_TOKEN || core.getInput("ORIGIN_TOKEN") || "",
+      process.env.SOURCE_TOKEN || core.getInput("SOURCE_TOKEN") || "",
     API_SERVER:
-      getAPIServer(process.env.ORIGIN_API_SERVER ||
-        core.getInput("ORIGIN_API_SERVER") ||
+      getAPIServer(process.env.SOURCE_API_SERVER ||
+        core.getInput("SOURCE_API_SERVER") ||
         "https://api.skedulo.com/"),
-    ORG_NAME: process.env.ORIGIN_ORG_NAME || core.getInput("ORIGIN_ORG_NAME") || "Testing",
+    ORG_NAME: process.env.SOURCE_ORG_NAME || core.getInput("SOURCE_ORG_NAME") || "Testing",
   }
 
-  const destAuthorizeData: AuthorizeData = {
+  const targetAuthorizeData: AuthorizeData = {
     TOKEN:
-      process.env.DEST_TOKEN || core.getInput("DEST_TOKEN") || "",
+      process.env.TARGET_TOKEN || core.getInput("TARGET_TOKEN") || "",
     API_SERVER:
-      getAPIServer(process.env.DEST_API_SERVER ||
-        core.getInput("DEST_API_SERVER") ||
+      getAPIServer(process.env.TARGET_API_SERVER ||
+        core.getInput("TARGET_API_SERVER") ||
         "https://api.skedulo.com/"),
-    ORG_NAME: process.env.DEST_ORG_NAME || core.getInput("DEST_ORG_NAME") || "Testing",
+    ORG_NAME: process.env.TARGET_ORG_NAME || core.getInput("TARGET_ORG_NAME") || "Testing",
   }
 
-  return await (new PkgMigrationService(originAuthorizeData, destAuthorizeData)).migration()
+  return await (new PkgMigrationService(sourceAuthorizeData, targetAuthorizeData)).migration()
 
 }
 
