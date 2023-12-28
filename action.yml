@@ -7,18 +7,12 @@ inputs:
   SOURCE_TOKEN:
     description: 'Source Token'
     required: true
-  SOURCE_ORG_NAME:
-    description: 'Source Org Name'
-    required: false
   TARGET_API_SERVER:
     description: 'Target API Server'
     required: true
   TARGET_TOKEN:
     description: 'Target Token'
     required: true
-  TARGET_ORG_NAME:
-    description: 'Target Org Name'
-    required: false
 runs:
   using: node16
   main: 'dist/index.js'

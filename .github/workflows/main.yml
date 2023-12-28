@@ -12,11 +12,6 @@ on:
         description: "Source API Token"
         type: string
         required: true
-      SOURCE_ORG_NAME:
-        description: "Source Org Name"
-        type: string
-        required: false
-        default: "A"
       TARGET_API_SERVER:
         description: "Target API server"
         type: string
@@ -26,11 +21,6 @@ on:
         description: "Target API Token"
         type: string
         required: true
-      TARGET_ORG_NAME:
-        description: "Target Org Name"
-        type: string
-        required: false
-        default: "B"
 jobs:
   migration:
       runs-on: ubuntu-latest
@@ -38,14 +28,12 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v4
 
-        - name: Migrate ${{ github.event.inputs.SOURCE_ORG_NAME }} to ${{ github.event.inputs.TARGET_ORG_NAME }}
+        - name: Migration
           uses: ./
           with:
             SOURCE_API_SERVER: ${{ github.event.inputs.SOURCE_API_SERVER }}
             SOURCE_TOKEN: ${{ github.event.inputs.SOURCE_TOKEN }}
-            SOURCE_ORG_NAME: ${{ github.event.inputs.SOURCE_ORG_NAME }}
             TARGET_API_SERVER: ${{ github.event.inputs.TARGET_API_SERVER }}
             TARGET_TOKEN: ${{ github.event.inputs.TARGET_TOKEN }}
-            TARGET_ORG_NAME: ${{ github.event.inputs.TARGET_ORG_NAME }}
 
 

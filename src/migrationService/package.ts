@@ -1,16 +1,22 @@
+import { IMigration } from '../interface/migration'
+import { APIService } from './apiService'
 import { getFileHash } from '../utils/tar'
 import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
-import { ServiceBase } from './serviceBase'
+import { extractTarball, createTarBall } from '../utils/tar'
+export class Package extends APIService implements IMigration {
 
-export class Package extends ServiceBase {
+  private downloadPath = './download/packages'
   private packages : any
 
-  async migration() {
+  public get serviceName() {
+    return 'Package'
+  }
+
+  public async migrate() {
 
     this.packages = await this.getPackages()
-
-    console.log('@@@@@@@ ', this.packages);
+    console.log('packages', this.packages)
 
     await this.downloadPackages()
 
@@ -23,15 +29,20 @@ export class Package extends ServiceBase {
 
   // pkg/installed
   private async getPackages() {
-    return await this.sourceApiRequest.get('/pkg/installed')
+    return await this.source.get('/pkg/installed')
   }
 
   // pkg/source/:name/:hash
   private async downloadPackages() {
     console.log('Start download')
+
+    const savePath = `${this.downloadPath}/tar`
+
     await Promise.all(this.packages.result.map(async (pkg : any) => {
       console.log('Download', pkg.name)
-      await this.sourceApiRequest.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, pkg.name)
+      await this.source.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, `${pkg.name}.tar`, savePath)
+      await extractTarball(`${savePath}/${pkg.name}`, `${savePath}/${pkg.name}.tar`)
+      await createTarBall(`${savePath}/${pkg.name}`, `${this.downloadPath}/${pkg.name}.tar.gz`)
     }))
     console.log('End downdoad')
   }
@@ -40,16 +51,16 @@ export class Package extends ServiceBase {
   private async deployPackages() {
     console.log('Start deploy')
     await Promise.all(this.packages.result.map(async (pkg : any) => {
-      const pkgPath = `./packages/${pkg.name}`
+      const pkgFilePath = `${this.downloadPath}/${pkg.name}.tar.gz`
 
       const formData = new FormData()
-      formData.set('source', await fileFromPath(pkgPath))
+      formData.set('source', await fileFromPath(pkgFilePath))
       formData.set('name', pkg.name)
-      formData.set('hash', getFileHash(pkgPath))
+      formData.set('hash', getFileHash(pkgFilePath))
       formData.set('metadata', JSON.stringify(pkg.metadata))
 
       console.log('Deploy ', pkg.name)
-      const { result }  : any = await this.targetApiRequest.post(`/pkg/source/${pkg.name}`, formData, true)
+      const { result }  : any = await this.target.post(`/pkg/source/${pkg.name}`, formData, true)
       console.log('Deploy result ', result)
       const { name, hash } = result
 
@@ -57,7 +68,7 @@ export class Package extends ServiceBase {
         pkg.newHash = hash
         this.logger.log({
           level: 'info',
-          message: `${this.targetAuthorizeData.ORG_NAME} ${name} Upload success!`
+          message: `${name} Upload success!`
         })
       }
     }))
@@ -76,7 +87,7 @@ export class Package extends ServiceBase {
       }
 
       console.log('Build ', pkg.name)
-      const { result } : any = await this.targetApiRequest.post('/pkgr/build', body)
+      const { result } : any = await this.target.post('/pkgr/build', body)
       console.log('Build result ', result)
       const { id: buildId } = result
 
@@ -84,7 +95,7 @@ export class Package extends ServiceBase {
 
       this.logger.log({
         level: 'info',
-        message: `${this.targetAuthorizeData.ORG_NAME} ${pkg.name} startBuild success!`
+        message: `${pkg.name} startBuild success!`
       })
     }))
     console.log('End build')
@@ -107,14 +118,14 @@ export class Package extends ServiceBase {
           checkCount++
 
           console.log('Install ', pkg.name)
-          const result = await this.targetApiRequest.post(`/pkgr/build/install/${pkg.buildId}`)
+          const result = await this.target.post(`/pkgr/build/install/${pkg.buildId}`)
           console.log('Install result ', result)
         }
 
         if (pkg.checkTime == 3 || status == 'Failed') {
           this.logger.log({
             level: 'error',
-            message: `${this.targetAuthorizeData.ORG_NAME} ${pkg.name} build failed!`
+            message: `${pkg.name} build failed!`
           })
 
           checkCount++
@@ -130,7 +141,7 @@ export class Package extends ServiceBase {
   }
 
   private async getBuildStatus(id: string) {
-    const { result } : any = await this.targetApiRequest.get(`/pkg/builds/${id}`)
+    const { result } : any = await this.target.get(`/pkg/builds/${id}`)
 
     return result
   }

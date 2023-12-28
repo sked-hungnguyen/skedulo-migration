@@ -12,10 +12,6 @@ This action migrate Skedulo packages to another enviroment. You need to get api 
 
 **Required** Source Skedulo token API using to run deploy.
 
-### `SOURCE_ORG_NAME`
-
-**Option** Source Skedulo org name, example: Cx training.
-
 ### `TARGET_API_SERVER`
 
 **Required** Target Skedulo API Server example: https://api.skedulo.com.
@@ -23,10 +19,6 @@ This action migrate Skedulo packages to another enviroment. You need to get api 
 ### `TARGET_TOKEN`
 
 **Required** Target Skedulo token API using to run deploy.
-
-### `TARGET_ORG_NAME`
-
-**Option** Target Skedulo org name, example: Cx training.
 
 ## Example usage
 
@@ -36,8 +28,6 @@ steps:
     with:
       SOURCE_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}
       SOURCE_TOKEN: ${{ secrets.SKEDULO_API_TOKEN }}
-      SOURCE_ORG_NAME: ${{ vars.ORG_NAME }}
       TARGET_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}
       TARGET_TOKEN: ${{ secrets.SKEDULO_API_TOKEN }}
-      TARGET_ORG_NAME: ${{ vars.ORG_NAME }}
 ```
