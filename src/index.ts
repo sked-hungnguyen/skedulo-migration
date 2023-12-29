@@ -1,4 +1,4 @@
-import { AuthorizeData, IMigration } from './interface/migration'
+import { AuthorizeData } from './utils/fetch'
 import { APIService } from './migrationService/apiService'
 import * as dotenv from 'dotenv'
 import * as core from '@actions/core'
@@ -49,7 +49,7 @@ async function migration() {
 
   const apiService = await APIService.init({ source, target })
   //await apiService.loadTeamName()
-  console.log('Migrate ', apiService.authorizeData.source.TEAM_NAME, ' to ', apiService.authorizeData.target.TEAM_NAME)
+  console.log('Migrate ', apiService.svcData.source.TEAM_NAME, ' to ', apiService.svcData.target.TEAM_NAME)
 
   await Promise.all(SERVICES.map(async (service: string) => {
     console.log('Start migrate ', service)

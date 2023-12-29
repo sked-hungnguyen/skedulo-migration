@@ -1,9 +1,14 @@
 import fetch from 'node-fetch'
-import { AuthorizeData } from '../interface/migration'
 const fs = require('node:fs')
 const zlib = require('node:zlib')
 const { promisify } = require('util')
 const { pipeline } = require('stream')
+
+export interface AuthorizeData {
+  TOKEN: string
+  API_SERVER: string | undefined
+  TEAM_NAME?: string | undefined
+}
 export class Fetch {
 
   private isFormData : boolean = false

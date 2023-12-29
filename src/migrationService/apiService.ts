@@ -1,19 +1,17 @@
-
 import { Fetch } from '../utils/fetch'
-import { AuthorizeData } from '../interface/migration'
 import * as winston from 'winston'
 
 export class APIService {
   private static svcInstance : APIService
 
-  private sourceApiRequest: Fetch = this.authorizeData.apiService ? this.authorizeData.apiService.sourceApiRequest : new Fetch(this.authorizeData.source)
-  private targetApiRequest: Fetch = this.authorizeData.apiService ? this.authorizeData.apiService.targetApiRequest : new Fetch(this.authorizeData.target)
+  private sourceApiRequest: Fetch = this.svcData.apiService ? this.svcData.apiService.sourceApiRequest : new Fetch(this.svcData.source)
+  private targetApiRequest: Fetch = this.svcData.apiService ? this.svcData.apiService.targetApiRequest : new Fetch(this.svcData.target)
 
-  constructor(public authorizeData : any) {}
+  constructor(public svcData : any) {}
 
-  public static async init(authorizeData : any) {
+  public static async init(svcData : any) {
     if (!APIService.svcInstance) {
-      APIService.svcInstance = new APIService(authorizeData)
+      APIService.svcInstance = new APIService(svcData)
     }
     await APIService.svcInstance.loadTeamName()
 
@@ -29,11 +27,11 @@ export class APIService {
   }
 
   private async loadTeamName() {
-    if (!this.authorizeData.source.TEAM_NAME) {
-      this.authorizeData.source.TEAM_NAME = await this.getTeamName(this.sourceApiRequest)
+    if (!this.svcData.source.TEAM_NAME) {
+      this.svcData.source.TEAM_NAME = await this.getTeamName(this.sourceApiRequest)
     }
-    if (!this.authorizeData.target.TEAM_NAME) {
-      this.authorizeData.target.TEAM_NAME = await this.getTeamName(this.targetApiRequest)
+    if (!this.svcData.target.TEAM_NAME) {
+      this.svcData.target.TEAM_NAME = await this.getTeamName(this.targetApiRequest)
     }
   }
 

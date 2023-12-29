@@ -51770,7 +51770,7 @@ function migration() {
         };
         const apiService = yield apiService_1.APIService.init({ source, target });
         //await apiService.loadTeamName()
-        console.log('Migrate ', apiService.authorizeData.source.TEAM_NAME, ' to ', apiService.authorizeData.target.TEAM_NAME);
+        console.log('Migrate ', apiService.svcData.source.TEAM_NAME, ' to ', apiService.svcData.target.TEAM_NAME);
         yield Promise.all(SERVICES.map((service) => __awaiter(this, void 0, void 0, function* () {
             console.log('Start migrate ', service);
             const svc = new serviceMap[service]({ apiService });
@@ -51823,10 +51823,10 @@ exports.APIService = void 0;
 const fetch_1 = __nccwpck_require__(7393);
 const winston = __nccwpck_require__(4158);
 class APIService {
-    constructor(authorizeData) {
-        this.authorizeData = authorizeData;
-        this.sourceApiRequest = this.authorizeData.apiService ? this.authorizeData.apiService.sourceApiRequest : new fetch_1.Fetch(this.authorizeData.source);
-        this.targetApiRequest = this.authorizeData.apiService ? this.authorizeData.apiService.targetApiRequest : new fetch_1.Fetch(this.authorizeData.target);
+    constructor(svcData) {
+        this.svcData = svcData;
+        this.sourceApiRequest = this.svcData.apiService ? this.svcData.apiService.sourceApiRequest : new fetch_1.Fetch(this.svcData.source);
+        this.targetApiRequest = this.svcData.apiService ? this.svcData.apiService.targetApiRequest : new fetch_1.Fetch(this.svcData.target);
         this.logger = winston.createLogger({
             format: winston.format.json(),
             defaultMeta: { service: 'user-service' },
@@ -51836,10 +51836,10 @@ class APIService {
             ]
         });
     }
-    static init(authorizeData) {
+    static init(svcData) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!APIService.svcInstance) {
-                APIService.svcInstance = new APIService(authorizeData);
+                APIService.svcInstance = new APIService(svcData);
             }
             yield APIService.svcInstance.loadTeamName();
             return APIService.svcInstance;
@@ -51853,11 +51853,11 @@ class APIService {
     }
     loadTeamName() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.authorizeData.source.TEAM_NAME) {
-                this.authorizeData.source.TEAM_NAME = yield this.getTeamName(this.sourceApiRequest);
+            if (!this.svcData.source.TEAM_NAME) {
+                this.svcData.source.TEAM_NAME = yield this.getTeamName(this.sourceApiRequest);
             }
-            if (!this.authorizeData.target.TEAM_NAME) {
-                this.authorizeData.target.TEAM_NAME = yield this.getTeamName(this.targetApiRequest);
+            if (!this.svcData.target.TEAM_NAME) {
+                this.svcData.target.TEAM_NAME = yield this.getTeamName(this.targetApiRequest);
             }
         });
     }
@@ -51893,9 +51893,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CustomFields = void 0;
 const apiService_1 = __nccwpck_require__(4953);
 class CustomFields extends apiService_1.APIService {
-    get serviceName() {
-        return 'CustomFields';
-    }
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
             this.fields = yield this.getSourceCustomFileds();
@@ -51948,9 +51945,6 @@ class CustomForm extends apiService_1.APIService {
         super(...arguments);
         this.REQUIRED_FORM_FILES = ['definition.json', 'viewSources.zip', 'main.js.gz', 'main.js.map.gz', 'node.js.gz', 'node.js.map.gz', 'native.js.gz', 'native.js.map.gz'];
         this.downloadPath = './download/forms';
-    }
-    get serviceName() {
-        return 'CustomForm';
     }
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -52054,9 +52048,6 @@ class JobTemplates extends apiService_1.APIService {
         super(...arguments);
         this.jobTemplates = [];
     }
-    get serviceName() {
-        return 'JobTemplates';
-    }
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
             this.jobTemplates = yield this.getJobTemplates();
@@ -52122,9 +52113,6 @@ class JobTypes extends apiService_1.APIService {
         super(...arguments);
         this.jobTypes = [];
     }
-    get serviceName() {
-        return 'JobTypes';
-    }
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
             this.jobTypes = yield this.getJobTypes();
@@ -52172,9 +52160,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrgPreference = void 0;
 const apiService_1 = __nccwpck_require__(4953);
 class OrgPreference extends apiService_1.APIService {
-    get serviceName() {
-        return 'OrgPreference';
-    }
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
             this.preference = yield this.getSourcePreference();
@@ -52225,9 +52210,6 @@ class Package extends apiService_1.APIService {
     constructor() {
         super(...arguments);
         this.downloadPath = './download/packages';
-    }
-    get serviceName() {
-        return 'Package';
     }
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
