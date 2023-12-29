@@ -4,6 +4,10 @@ This action migrate Skedulo packages to another enviroment. You need to get api 
 
 ## Inputs
 
+### `SERVICES`
+
+**Required** Services to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package
+
 ### `SOURCE_API_SERVER`
 
 **Required** Source Skedulo API Server example: https://api.skedulo.com.
