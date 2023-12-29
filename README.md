@@ -30,6 +30,8 @@ This action migrate Skedulo packages to another enviroment. You need to get api 
 steps:
     - uses: sked-hungnguyen/skedulo-migration
     with:
+
+      SERVICES: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package"
       SOURCE_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}
       SOURCE_TOKEN: ${{ secrets.SKEDULO_API_TOKEN }}
       TARGET_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}
