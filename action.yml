@@ -1,6 +1,9 @@
 name: 'Skedulo Migration'
 description: 'Skedulo Migration Actions'
 inputs:
+  SERVICES:
+    description: 'Services to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package'
+    required: true
   SOURCE_API_SERVER:
     description: 'Source API Server'
     required: true

@@ -3,6 +3,11 @@ name: Skedulo Enviroment Migration
 on:
   workflow_dispatch:
     inputs:
+      SERVICES:
+        description: "Services to migrate"
+        type: string
+        required: true
+        default: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package"
       SOURCE_API_SERVER:
         description: "Source API server"
         type: string

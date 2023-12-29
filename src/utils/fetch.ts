@@ -19,6 +19,11 @@ export class Fetch {
     return this.request('GET', urlPath)
   }
 
+  async put(urlPath: string, body: object = {}, isFormData : boolean = false) {
+    this.isFormData = isFormData
+    return this.request('PUT', urlPath, body)
+  }
+
   async getFile(urlPath: string, fileName: string, savePath: string = './download', isGz : boolean = false) {
 
     await fs.mkdirSync(savePath, { recursive: true })

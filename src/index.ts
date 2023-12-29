@@ -1,4 +1,4 @@
-import { AuthorizeData } from './interface/migration'
+import { AuthorizeData, IMigration } from './interface/migration'
 import { APIService } from './migrationService/apiService'
 import * as dotenv from 'dotenv'
 import * as core from '@actions/core'
@@ -8,6 +8,8 @@ import { Package } from './migrationService/package'
 import { OrgPreference } from './migrationService/orgPreference'
 import { CustomFields } from './migrationService/customFields'
 import { CustomForm } from './migrationService/customForm'
+import { JobTypes } from './migrationService/jobTypes'
+import { JobTemplates } from './migrationService/jobTemplates'
 
 dotenv.config();
 
@@ -20,8 +22,17 @@ const getAPIServer = (url: string) => {
   return url;
 }
 
-async function migration() {
+const serviceMap : any = {
+  'Package': Package,
+  'OrgPreference': OrgPreference,
+  'CustomFields': CustomFields,
+  'CustomForm': CustomForm,
+  'JobTypes': JobTypes,
+  'JobTemplates': JobTemplates
+}
 
+async function migration() {
+  const SERVICES = (process.env.SERVICES || core.getInput('SERVICES') || '').split(',') || []
   const source: AuthorizeData = {
     TOKEN:
       process.env.SOURCE_TOKEN || core.getInput('SOURCE_TOKEN') || '',
@@ -40,6 +51,12 @@ async function migration() {
   //await apiService.loadTeamName()
   console.log('Migrate ', apiService.authorizeData.source.TEAM_NAME, ' to ', apiService.authorizeData.target.TEAM_NAME)
 
+  await Promise.all(SERVICES.map(async (service: string) => {
+    console.log('Start migrate ', service)
+    const svc = new serviceMap[service]( {apiService })
+    await svc.migrate()
+  }))
+
   /*const pkg = new Package({ apiService })
   await pkg.migrate()
 
@@ -47,11 +64,10 @@ async function migration() {
   await orgPreference.migrate()
 
   const customFields = new CustomFields({ apiService })
-  await customFields.migrate()*/
+  await customFields.migrate()
 
   const customForm = new CustomForm({ apiService })
-  await customForm.migrate()
-
+  await customForm.migrate()*/
 }
 
 (async () => {
