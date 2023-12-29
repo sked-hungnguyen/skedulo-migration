@@ -1,12 +1,7 @@
 import { APIService } from './apiService'
-import { IMigration } from '../interface/migration'
 
-export class CustomFields extends APIService implements IMigration {
+export class CustomFields extends APIService {
   private fields : any
-
-  public get serviceName() {
-    return 'CustomFields'
-  }
 
   public async migrate() {
       this.fields = await this.getSourceCustomFileds()

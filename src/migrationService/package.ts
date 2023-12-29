@@ -1,17 +1,12 @@
-import { IMigration } from '../interface/migration'
 import { APIService } from './apiService'
 import { getFileHash } from '../utils/tar'
 import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
 import { extractTarball, createTarBall } from '../utils/tar'
-export class Package extends APIService implements IMigration {
+export class Package extends APIService {
 
   private downloadPath = './download/packages'
   private packages : any
-
-  public get serviceName() {
-    return 'Package'
-  }
 
   public async migrate() {
 

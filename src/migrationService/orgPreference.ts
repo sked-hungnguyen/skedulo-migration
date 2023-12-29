@@ -1,12 +1,7 @@
 import { APIService } from './apiService'
-import { IMigration } from '../interface/migration'
 
-export class OrgPreference extends APIService implements IMigration {
+export class OrgPreference extends APIService {
   private preference : any
-
-  public get serviceName() {
-  return 'OrgPreference'
-  }
 
   public async migrate() {
       this.preference = await this.getSourcePreference()

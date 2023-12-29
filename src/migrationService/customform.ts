@@ -1,17 +1,12 @@
 import { APIService } from './apiService'
-import { IMigration } from '../interface/migration'
 import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
 const fs = require('node:fs')
 
-export class CustomForm extends APIService implements IMigration {
+export class CustomForm extends APIService {
   private REQUIRED_FORM_FILES = ['definition.json', 'viewSources.zip', 'main.js.gz', 'main.js.map.gz', 'node.js.gz', 'node.js.map.gz', 'native.js.gz', 'native.js.map.gz']
   private downloadPath = './download/forms'
   private customForm : any
-
-  public get serviceName() {
-    return 'CustomForm'
-  }
 
   public async migrate() {
     this.customForm = await this.getSourceForms()

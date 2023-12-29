@@ -1,6 +1,5 @@
 import { Fetch } from '../utils/fetch'
 import { APIService } from './apiService'
-import { IMigration } from '../interface/migration'
 
 interface JobType {
   value: string
@@ -9,12 +8,8 @@ interface JobType {
   defaultValue: boolean
 }
 
-export class JobTypes extends APIService implements IMigration {
+export class JobTypes extends APIService {
     private jobTypes : JobType[] = []
-
-    public get serviceName() {
-        return 'JobTypes'
-      }
 
     public async migrate() {
         this.jobTypes = await this.getJobTypes()
