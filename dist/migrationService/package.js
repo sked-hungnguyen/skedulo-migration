@@ -9,31 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PkgMigrationService = void 0;
-const tar_1 = require("./utils/tar");
-const winston = require("winston");
-const fetch_1 = require("./utils/fetch");
+exports.Package = void 0;
+const apiService_1 = require("./apiService");
+const tar_1 = require("../utils/tar");
 const formdata_node_1 = require("formdata-node");
 const file_from_path_1 = require("formdata-node/file-from-path");
-const logger = winston.createLogger({
-    format: winston.format.json(),
-    defaultMeta: { service: 'user-service' },
-    transports: [
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'combined.log' }),
-    ]
-});
-class PkgMigrationService {
-    constructor(originAuthorizeData, destAuthorizeData) {
-        this.originAuthorizeData = originAuthorizeData;
-        this.destAuthorizeData = destAuthorizeData;
-        this.originApiRequest = new fetch_1.Fetch(this.originAuthorizeData);
-        this.destApiRequest = new fetch_1.Fetch(this.destAuthorizeData);
+const tar_2 = require("./tar");
+class Package extends apiService_1.APIService {
+    constructor() {
+        super(...arguments);
+        this.downloadPath = './download/packages';
     }
-    migration() {
+    get serviceName() {
+        return 'Package';
+    }
+    migrate() {
         return __awaiter(this, void 0, void 0, function* () {
             this.packages = yield this.getPackages();
-            console.log('@@@@@@@ ', this.packages);
             yield this.downloadPackages();
             yield this.deployPackages();
             yield this.buildPkg();
@@ -43,16 +35,19 @@ class PkgMigrationService {
     // pkg/installed
     getPackages() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.originApiRequest.get('/pkg/installed');
+            return yield this.source.get('/pkg/installed');
         });
     }
     // pkg/source/:name/:hash
     downloadPackages() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('Start download');
+            const savePath = `${this.downloadPath}/tar`;
             yield Promise.all(this.packages.result.map((pkg) => __awaiter(this, void 0, void 0, function* () {
                 console.log('Download', pkg.name);
-                yield this.originApiRequest.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, pkg.name);
+                yield this.source.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, `${pkg.name}.tar`, savePath);
+                yield (0, tar_2.extractTarball)(`${savePath}/${pkg.name}`, `${savePath}/${pkg.name}.tar`);
+                yield (0, tar_2.createTarBall)(`${savePath}/${pkg.name}`, `${this.downloadPath}/${pkg.name}.tar.gz`);
             })));
             console.log('End downdoad');
         });
@@ -62,21 +57,21 @@ class PkgMigrationService {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('Start deploy');
             yield Promise.all(this.packages.result.map((pkg) => __awaiter(this, void 0, void 0, function* () {
-                const pkgPath = `./packages/${pkg.name}`;
+                const pkgFilePath = `${this.downloadPath}/${pkg.name}.tar.gz`;
                 const formData = new formdata_node_1.FormData();
-                formData.set('source', yield (0, file_from_path_1.fileFromPath)(pkgPath));
+                formData.set('source', yield (0, file_from_path_1.fileFromPath)(pkgFilePath));
                 formData.set('name', pkg.name);
-                formData.set('hash', (0, tar_1.getFileHash)(pkgPath));
+                formData.set('hash', (0, tar_1.getFileHash)(pkgFilePath));
                 formData.set('metadata', JSON.stringify(pkg.metadata));
                 console.log('Deploy ', pkg.name);
-                const { result } = yield this.destApiRequest.post(`/pkg/source/${pkg.name}`, formData, true);
+                const { result } = yield this.target.post(`/pkg/source/${pkg.name}`, formData, true);
                 console.log('Deploy result ', result);
                 const { name, hash } = result;
                 if (name && hash) {
                     pkg.newHash = hash;
-                    logger.log({
+                    this.logger.log({
                         level: 'info',
-                        message: `${this.destAuthorizeData.TEAM_NAME} ${name} Upload success!`
+                        message: `${this.target.TEAM_NAME} ${name} Upload success!`
                     });
                 }
             })));
@@ -94,13 +89,13 @@ class PkgMigrationService {
                     action: 'deploy'
                 };
                 console.log('Build ', pkg.name);
-                const { result } = yield this.destApiRequest.post('/pkgr/build', body);
+                const { result } = yield this.targetApiRequest.post('/pkgr/build', body);
                 console.log('Build result ', result);
                 const { id: buildId } = result;
                 pkg.buildId = buildId;
-                logger.log({
+                this.logger.log({
                     level: 'info',
-                    message: `${this.destAuthorizeData.TEAM_NAME} ${pkg.name} startBuild success!`
+                    message: `${this.target.TEAM_NAME} ${pkg.name} startBuild success!`
                 });
             })));
             console.log('End build');
@@ -123,13 +118,13 @@ class PkgMigrationService {
                         pkg.passed = true;
                         checkCount++;
                         console.log('Install ', pkg.name);
-                        const result = yield this.destApiRequest.post(`/pkgr/build/install/${pkg.buildId}`);
+                        const result = yield this.targetApiRequest.post(`/pkgr/build/install/${pkg.buildId}`);
                         console.log('Install result ', result);
                     }
                     if (pkg.checkTime == 3 || status == 'Failed') {
-                        logger.log({
+                        this.logger.log({
                             level: 'error',
-                            message: `${this.destAuthorizeData.TEAM_NAME} ${pkg.name} build failed!`
+                            message: `${this.target.TEAM_NAME} ${pkg.name} build failed!`
                         });
                         checkCount++;
                     }
@@ -143,9 +138,9 @@ class PkgMigrationService {
     }
     getBuildStatus(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { result } = yield this.destApiRequest.get(`/pkg/builds/${id}`);
+            const { result } = yield this.targetApiRequest.get(`/pkg/builds/${id}`);
             return result;
         });
     }
 }
-exports.PkgMigrationService = PkgMigrationService;
+exports.Package = Package;

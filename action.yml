@@ -1,24 +1,21 @@
 name: 'Skedulo Migration'
 description: 'Skedulo Migration Actions'
 inputs:
+  SERVICES:
+    description: 'Services to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package'
+    required: true
   SOURCE_API_SERVER:
     description: 'Source API Server'
     required: true
   SOURCE_TOKEN:
     description: 'Source Token'
     required: true
-  SOURCE_ORG_NAME:
-    description: 'Source Org Name'
-    required: false
   TARGET_API_SERVER:
     description: 'Target API Server'
     required: true
   TARGET_TOKEN:
     description: 'Target Token'
     required: true
-  TARGET_ORG_NAME:
-    description: 'Target Org Name'
-    required: false
 runs:
   using: node16
   main: 'dist/index.js'
