@@ -32,7 +32,7 @@ const serviceMap : any = {
 }
 
 async function migration() {
-  const SERVICES = (process.env.SERVICES || core.getInput('SERVICES') || '').split(',') || []
+  const SERVICES = (process.env.SERVICES || core.getInput('SERVICES'))?.split(',') || []
   const source: AuthorizeData = {
     TOKEN:
       process.env.SOURCE_TOKEN || core.getInput('SOURCE_TOKEN') || '',

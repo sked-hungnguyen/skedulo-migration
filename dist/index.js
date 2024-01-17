@@ -51758,8 +51758,9 @@ const serviceMap = {
     'JobTemplates': jobTemplates_1.JobTemplates
 };
 function migration() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const SERVICES = (process.env.SERVICES || core.getInput('SERVICES') || '').split(',') || [];
+        const SERVICES = ((_a = (process.env.SERVICES || core.getInput('SERVICES'))) === null || _a === void 0 ? void 0 : _a.split(',')) || [];
         const source = {
             TOKEN: process.env.SOURCE_TOKEN || core.getInput('SOURCE_TOKEN') || '',
             API_SERVER: getAPIServer(process.env.SOURCE_API_SERVER || core.getInput('SOURCE_API_SERVER') || 'https://api.skedulo.com')
@@ -51776,17 +51777,6 @@ function migration() {
             const svc = new serviceMap[service]({ apiService });
             yield svc.migrate();
         })));
-        /*const pkg = new Package({ apiService })
-        await pkg.migrate()
-      
-        const orgPreference = new OrgPreference({ apiService })
-        await orgPreference.migrate()
-      
-        const customFields = new CustomFields({ apiService })
-        await customFields.migrate()
-      
-        const customForm = new CustomForm({ apiService })
-        await customForm.migrate()*/
     });
 }
 (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -51895,22 +51885,29 @@ const apiService_1 = __nccwpck_require__(4953);
 class CustomFields extends apiService_1.APIService {
     migrate() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.fields = yield this.getSourceCustomFileds();
-            console.log('fields ', this.fields);
-            yield this.setTargetCustomFileds();
+            const schemasPath = "/custom/schemas";
+            this.schemas = yield this.getSource(schemasPath);
+            yield this.setTarget(schemasPath, this.schemas);
+            const fieldsPath = "/custom/fields";
+            this.fields = yield this.getSource(fieldsPath);
+            for (let i = this.fields.length - 1; i >= 0; i--) {
+                if (this.fields[i].isAlert === true) {
+                    this.fields[i].name = this.fields[i].name.replace("!alert::", "");
+                    break;
+                }
+            }
+            yield this.setTarget(fieldsPath, this.fields);
         });
     }
-    // config/preference
-    getSourceCustomFileds() {
+    getSource(path) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { result } = yield this.source.get('/custom/fields');
+            const { result } = yield this.source.get(path);
             return result;
         });
     }
-    setTargetCustomFileds() {
+    setTarget(path, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { result } = yield this.target.post('/custom/fields', this.fields);
-            console.log('result ', result);
+            const { result } = yield this.target.post(path, payload);
             return result;
         });
     }
