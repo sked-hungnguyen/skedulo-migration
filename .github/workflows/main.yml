@@ -36,6 +36,7 @@ jobs:
         - name: Migration
           uses: ./
           with:
+            SERVICES: ${{ github.event.inputs.SERVICES }}
             SOURCE_API_SERVER: ${{ github.event.inputs.SOURCE_API_SERVER }}
             SOURCE_TOKEN: ${{ github.event.inputs.SOURCE_TOKEN }}
             TARGET_API_SERVER: ${{ github.event.inputs.TARGET_API_SERVER }}
