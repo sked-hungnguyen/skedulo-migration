@@ -5,8 +5,6 @@ export class OrgPreference extends APIService {
 
   public async migrate() {
       this.preference = await this.getSourcePreference()
-      console.log('preference', this.preference)
-
       await this.setTargetPreference()
   }
 

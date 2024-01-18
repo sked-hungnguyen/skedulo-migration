@@ -10,14 +10,8 @@ export class CustomFields extends APIService {
     this.schemas = await this.getSource(schemasPath)
     await this.setTarget(schemasPath, this.schemas)
 
-    const fieldsPath = "/custom/fields"
+    const fieldsPath = "/custom/fields?legacyAlertPrefix=false"
     this.fields = await this.getSource(fieldsPath)
-    for (let i = this.fields.length - 1; i >= 0; i--) {
-      if (this.fields[i].isAlert === true) {
-        this.fields[i].name = this.fields[i].name.replace("!alert::", "")
-        break
-      }
-    }
     await this.setTarget(fieldsPath, this.fields)
   }
 

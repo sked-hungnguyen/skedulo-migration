@@ -58,7 +58,7 @@ export class Fetch {
       }
     }
 
-    if (method === 'POST') {
+    if (method === 'POST' || method === 'PUT') {
       options.body = body
       if (!this.isFormData) {
         options.headers['Content-Type'] = 'application/json'

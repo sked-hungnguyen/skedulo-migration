@@ -48,26 +48,14 @@ async function migration() {
   }
 
   const apiService = await APIService.init({ source, target })
-  //await apiService.loadTeamName()
   console.log('Migrate ', apiService.svcData.source.TEAM_NAME, ' to ', apiService.svcData.target.TEAM_NAME)
 
   await Promise.all(SERVICES.map(async (service: string) => {
     console.log('Start migrate ', service)
     const svc = new serviceMap[service]( {apiService })
     await svc.migrate()
+    console.log('End migrate ', service)
   }))
-
-  /*const pkg = new Package({ apiService })
-  await pkg.migrate()
-
-  const orgPreference = new OrgPreference({ apiService })
-  await orgPreference.migrate()
-
-  const customFields = new CustomFields({ apiService })
-  await customFields.migrate()
-
-  const customForm = new CustomForm({ apiService })
-  await customForm.migrate()*/
 }
 
 (async () => {

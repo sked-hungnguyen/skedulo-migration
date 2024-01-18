@@ -1,5 +1,4 @@
 import { Fetch } from '../utils/fetch'
-import * as winston from 'winston'
 
 export class APIService {
   private static svcInstance : APIService
@@ -40,13 +39,4 @@ export class APIService {
       const { result } : any = await f.get('/custom/usermetadata')
       return result?.team?.name
   }
-
-  public logger = winston.createLogger({
-    format: winston.format.json(),
-    defaultMeta: { service: 'user-service' },
-    transports: [
-      new winston.transports.File({ filename: 'error.log', level: 'error' }),
-      new winston.transports.File({ filename: 'combined.log' }),
-    ]
-  });
 }

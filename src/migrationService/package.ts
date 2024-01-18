@@ -3,6 +3,7 @@ import { getFileHash } from '../utils/tar'
 import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
 import { extractTarball, createTarBall } from '../utils/tar'
+import { c } from 'tar'
 export class Package extends APIService {
 
   private downloadPath = './download/packages'
@@ -11,7 +12,11 @@ export class Package extends APIService {
   public async migrate() {
 
     this.packages = await this.getPackages()
-    console.log('packages', this.packages)
+    console.log('Packages ', this.packages)
+
+    if (!this.packages || this.packages.length == 0) {
+      return
+    }
 
     await this.downloadPackages()
 
@@ -24,28 +29,29 @@ export class Package extends APIService {
 
   // pkg/installed
   private async getPackages() {
-    return await this.source.get('/pkg/installed')
+    const { result }  : any = await this.source.get('/pkg/installed')
+    return result
   }
 
   // pkg/source/:name/:hash
   private async downloadPackages() {
-    console.log('Start download')
+    console.log('Start download packages')
 
     const savePath = `${this.downloadPath}/tar`
 
-    await Promise.all(this.packages.result.map(async (pkg : any) => {
-      console.log('Download', pkg.name)
+    await Promise.all(this.packages.map(async (pkg : any) => {
+      console.log('Download package ', pkg.name)
       await this.source.getFile(`/pkg/source/${pkg.name}/${pkg.source.hash}`, `${pkg.name}.tar`, savePath)
       await extractTarball(`${savePath}/${pkg.name}`, `${savePath}/${pkg.name}.tar`)
       await createTarBall(`${savePath}/${pkg.name}`, `${this.downloadPath}/${pkg.name}.tar.gz`)
     }))
-    console.log('End downdoad')
+    console.log('End downdoad packages')
   }
 
   // /pkg/source/:name
   private async deployPackages() {
-    console.log('Start deploy')
-    await Promise.all(this.packages.result.map(async (pkg : any) => {
+    console.log('Start deploy packages')
+    await Promise.all(this.packages.map(async (pkg : any) => {
       const pkgFilePath = `${this.downloadPath}/${pkg.name}.tar.gz`
 
       const formData = new FormData()
@@ -54,26 +60,23 @@ export class Package extends APIService {
       formData.set('hash', getFileHash(pkgFilePath))
       formData.set('metadata', JSON.stringify(pkg.metadata))
 
-      console.log('Deploy ', pkg.name)
+      console.log('Deploy package ', pkg.name)
       const { result }  : any = await this.target.post(`/pkg/source/${pkg.name}`, formData, true)
-      console.log('Deploy result ', result)
+      console.log('Deploy package result ', result)
       const { name, hash } = result
 
       if (name && hash) {
         pkg.newHash = hash
-        this.logger.log({
-          level: 'info',
-          message: `${name} Upload success!`
-        })
+        console.log('Deploy package ', pkg.name, ' success')
       }
     }))
-    console.log('End deploy')
+    console.log('End deploy packages')
   }
 
   // /pkgr/build
   private async buildPkg() {
-    console.log('Start build')
-    await Promise.all(this.packages.result.map(async (pkg : any) => {
+    console.log('Start build packages')
+    await Promise.all(this.packages.map(async (pkg : any) => {
 
       const body = {
         name: pkg.name,
@@ -81,57 +84,48 @@ export class Package extends APIService {
         action: 'deploy'
       }
 
-      console.log('Build ', pkg.name)
+      console.log('Build package ', pkg.name)
       const { result } : any = await this.target.post('/pkgr/build', body)
-      console.log('Build result ', result)
+      console.log('Build package result ', result)
       const { id: buildId } = result
 
       pkg.buildId = buildId
-
-      this.logger.log({
-        level: 'info',
-        message: `${pkg.name} startBuild success!`
-      })
     }))
-    console.log('End build')
+    console.log('End build packages')
   }
 
   private async checkBuildInstallPkg() {
     let checkCount = 0
     const checkBuild = setInterval(async () => {
-      console.log('Start check build ', checkCount)
-      await Promise.all(this.packages.result.filter((pkg : any) => (!pkg.checkTime && pkg.checkTime < 3) || !pkg.passed).map(async (pkg : any) => {
+      console.log('Start check build packages', checkCount)
+      await Promise.all(this.packages.filter((pkg : any) => (!pkg.checkTime && pkg.checkTime < 3) || !pkg.passed).map(async (pkg : any) => {
         if (!pkg.checkTime) {
           pkg.checkTime = 0
         }
         pkg.checkTime += 1
-        console.log('Check build ', pkg.name, ' - ', pkg.checkTime)
+        console.log('Check build package ', pkg.name, ' - ', pkg.checkTime)
         const { status } : any = await this.getBuildStatus(pkg.buildId)
-        console.log(`running interval check - ${pkg.name} build status is`, status)
+        console.log(`Running interval check - ${pkg.name} build status is`, status)
         if (status == 'Passed') {
           pkg.passed = true
           checkCount++
 
-          console.log('Install ', pkg.name)
+          console.log('Install package', pkg.name)
           const result = await this.target.post(`/pkgr/build/install/${pkg.buildId}`)
-          console.log('Install result ', result)
+          console.log('Install package result ', result)
         }
 
         if (pkg.checkTime == 3 || status == 'Failed') {
-          this.logger.log({
-            level: 'error',
-            message: `${pkg.name} build failed!`
-          })
-
+          console.log('Build package ', pkg.name, ' failed')
           checkCount++
         }
 
 
-        if (checkCount >= this.packages.result.length) {
+        if (checkCount >= this.packages.length) {
           clearInterval(checkBuild)
         }
       }))
-      console.log('End check build ', checkCount)
+      console.log('End check build packages ', checkCount)
     }, 1000 * 60)
   }
 

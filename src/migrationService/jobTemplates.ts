@@ -1,3 +1,4 @@
+import { c } from 'tar'
 import { Fetch } from '../utils/fetch'
 import { APIService } from './apiService'
 
@@ -16,14 +17,17 @@ interface JobValue {
 }
 
 export class JobTemplates extends APIService {
-    private jobTemplates : JobTemplate[] = []
+    private sourceJobTemplates : JobTemplate[] = []
 
      public async migrate() {
-        this.jobTemplates = await this.getJobTemplates()
+        this.sourceJobTemplates = await this.getJobTemplates()
+        if (!this.sourceJobTemplates || this.sourceJobTemplates.length == 0) {
+          return
+        }
+
         await this.setTargetJobTemplates()
     }
 
-    // config/preference
     private async getJobTemplates(f : Fetch = this.source) {
         const { result } : any = await f.get('/config/templates/Jobs')
         const jobTemplates : JobTemplate[] = result as JobTemplate[]
@@ -36,7 +40,7 @@ export class JobTemplates extends APIService {
 
       if (targetTemplates) {
         //Check if template already exist
-        const customJobTemplates = this.jobTemplates.filter(
+        const customJobTemplates = this.sourceJobTemplates.filter(
           ({ name: sourceName }) => !targetTemplates.some(({ name: targetName }) => sourceName === targetName)
         )
 
@@ -50,7 +54,7 @@ export class JobTemplates extends APIService {
       const newTargetTemplates : JobTemplate[] = await this.getJobTemplates(this.target)
 
       //Migrate values
-      const valuePromise = this.jobTemplates.map(async template => {
+      const valuePromise = this.sourceJobTemplates.map(async template => {
         const { result } : any = await this.source.get(`/config/template/${template.id}/values`)
         const values : JobValue[] = result as JobValue[]
 
