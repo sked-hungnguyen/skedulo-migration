@@ -7,7 +7,7 @@ on:
         description: "Services to migrate"
         type: string
         required: true
-        default: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions"
+        default: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions,MobileNotifications"
       SOURCE_API_SERVER:
         description: "Source API server"
         type: string

@@ -33,7 +33,7 @@ steps:
     - uses: sked-hungnguyen/skedulo-migration
     with:
 
-      SERVICES: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions"
+      SERVICES: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions,MobileNotifications"
       SOURCE_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}
       SOURCE_TOKEN: ${{ secrets.SKEDULO_API_TOKEN }}
       TARGET_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}

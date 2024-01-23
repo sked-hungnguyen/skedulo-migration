@@ -12,6 +12,7 @@ import { JobTypes } from './migrationService/jobTypes'
 import { JobTemplates } from './migrationService/jobTemplates'
 import { Webhook } from './migrationService/webhook'
 import { TriggerActions } from './migrationService/triggerActions'
+import { MobileNotifications } from './migrationService/mobileNotifications'
 
 dotenv.config();
 
@@ -32,7 +33,8 @@ const serviceMap : any = {
   'JobTypes': JobTypes,
   'JobTemplates': JobTemplates,
   'Webhook': Webhook,
-  'TriggerActions': TriggerActions
+  'TriggerActions': TriggerActions,
+  'MobileNotifications': MobileNotifications
 }
 
 async function migration() {

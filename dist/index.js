@@ -37586,6 +37586,7 @@ const jobTypes_1 = __nccwpck_require__(8617);
 const jobTemplates_1 = __nccwpck_require__(9770);
 const webhook_1 = __nccwpck_require__(8712);
 const triggerActions_1 = __nccwpck_require__(6295);
+const mobileNotifications_1 = __nccwpck_require__(9694);
 dotenv.config();
 const getAPIServer = (url) => {
     // if end with / remove it
@@ -37602,7 +37603,8 @@ const serviceMap = {
     'JobTypes': jobTypes_1.JobTypes,
     'JobTemplates': jobTemplates_1.JobTemplates,
     'Webhook': webhook_1.Webhook,
-    'TriggerActions': triggerActions_1.TriggerActions
+    'TriggerActions': triggerActions_1.TriggerActions,
+    'MobileNotifications': mobileNotifications_1.MobileNotifications
 };
 function migration() {
     var _a;
@@ -37978,6 +37980,65 @@ class JobTypes extends apiService_1.APIService {
     }
 }
 exports.JobTypes = JobTypes;
+
+
+/***/ }),
+
+/***/ 9694:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MobileNotifications = void 0;
+const apiService_1 = __nccwpck_require__(4953);
+class MobileNotifications extends apiService_1.APIService {
+    constructor() {
+        super(...arguments);
+        this.templates = ['job_dispatch', 'job_reminder', 'job_cancelled', 'job_offer'];
+        this.templateTypes = ['sms', 'push'];
+    }
+    migrate() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.sourceMobileNotifications = yield this.getMobileNotifications();
+            if (!this.sourceMobileNotifications || this.sourceMobileNotifications.length == 0) {
+                return;
+            }
+            yield this.setMobileNotifications();
+        });
+    }
+    getMobileNotifications(f = this.source) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { result } = yield f.get('/notifications/v2/templates');
+            return result;
+        });
+    }
+    setMobileNotifications() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Delete all target custom mobile notifications
+            yield Promise.all(this.templates.map((template) => __awaiter(this, void 0, void 0, function* () {
+                yield Promise.all(this.templateTypes.map((templateType) => __awaiter(this, void 0, void 0, function* () {
+                    yield this.target.delete(`/notifications/v2/template/${template}/${templateType}`);
+                })));
+            })));
+            // Migrate custom mobile notifications
+            const mobileNotificationPromise = this.sourceMobileNotifications.map((mobileNotification) => __awaiter(this, void 0, void 0, function* () {
+                yield this.target.post(`/notifications/v2/template/${mobileNotification.type}/${mobileNotification.protocol}`, { template: mobileNotification.template.text });
+            }));
+            yield Promise.all(mobileNotificationPromise);
+        });
+    }
+}
+exports.MobileNotifications = MobileNotifications;
 
 
 /***/ }),
