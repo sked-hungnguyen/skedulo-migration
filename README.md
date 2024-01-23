@@ -6,7 +6,7 @@ This action migrate Skedulo packages to another enviroment. You need to get api 
 
 ### `SERVICES`
 
-**Services** to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions
+**Services** to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions,MobileNotifications
 
 **Note**: CustomFields for SF fields mapping only
 
