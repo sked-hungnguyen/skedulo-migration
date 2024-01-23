@@ -6,12 +6,12 @@ This action migrate Skedulo packages to another enviroment. You need to get api 
 
 ### `SERVICES`
 
-**Services** to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package
+**Services** to migrate: OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions
 
 **Note**: CustomFields for SF fields mapping only
 
 ### `SOURCE_API_SERVER`
-
+skedJobAllocationServices
 **Required** Source Skedulo API Server example: https://api.skedulo.com.
 
 ### `SOURCE_TOKEN`
@@ -33,7 +33,7 @@ steps:
     - uses: sked-hungnguyen/skedulo-migration
     with:
 
-      SERVICES: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package"
+      SERVICES: "OrgPreference,JobTypes,JobTemplates,CustomFields,CustomForm,Package,Webhook,TriggerActions"
       SOURCE_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}
       SOURCE_TOKEN: ${{ secrets.SKEDULO_API_TOKEN }}
       TARGET_API_SERVER: ${{ vars.SKEDULO_API_SERVER }}

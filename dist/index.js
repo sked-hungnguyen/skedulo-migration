@@ -37584,6 +37584,8 @@ const customFields_1 = __nccwpck_require__(2651);
 const customForm_1 = __nccwpck_require__(3701);
 const jobTypes_1 = __nccwpck_require__(8617);
 const jobTemplates_1 = __nccwpck_require__(9770);
+const webhook_1 = __nccwpck_require__(8712);
+const triggerActions_1 = __nccwpck_require__(6295);
 dotenv.config();
 const getAPIServer = (url) => {
     // if end with / remove it
@@ -37598,7 +37600,9 @@ const serviceMap = {
     'CustomFields': customFields_1.CustomFields,
     'CustomForm': customForm_1.CustomForm,
     'JobTypes': jobTypes_1.JobTypes,
-    'JobTemplates': jobTemplates_1.JobTemplates
+    'JobTemplates': jobTemplates_1.JobTemplates,
+    'Webhook': webhook_1.Webhook,
+    'TriggerActions': triggerActions_1.TriggerActions
 };
 function migration() {
     var _a;
@@ -38166,6 +38170,120 @@ exports.Package = Package;
 
 /***/ }),
 
+/***/ 6295:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TriggerActions = void 0;
+const apiService_1 = __nccwpck_require__(4953);
+class TriggerActions extends apiService_1.APIService {
+    migrate() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.sourceTriggerActions = yield this.getTriggerActions();
+            if (!this.sourceTriggerActions || this.sourceTriggerActions.length == 0) {
+                return;
+            }
+            yield this.setTargetTriggerAction();
+        });
+    }
+    getTriggerActions(f = this.source) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { result } = yield f.get('/triggered_actions');
+            return result;
+        });
+    }
+    setTargetTriggerAction() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const targetTriggerActions = yield this.getTriggerActions(this.target);
+            if (targetTriggerActions) {
+                // Check if Trigger Actions already exist to delete
+                const exitedTriggerActions = targetTriggerActions.filter((source) => this.sourceTriggerActions.some((target) => source.name === target.name));
+                const deleteExistedTriggerActions = exitedTriggerActions.map((triggerAction) => __awaiter(this, void 0, void 0, function* () {
+                    return this.target.delete(`/triggered_actions/${triggerAction.id}`);
+                }));
+                yield Promise.all(deleteExistedTriggerActions);
+            }
+            // Migrate TriggerActions
+            const triggerActionPromise = this.sourceTriggerActions.map((triggerAction) => __awaiter(this, void 0, void 0, function* () {
+                yield this.target.post(`/triggered_actions`, triggerAction);
+            }));
+            yield Promise.all(triggerActionPromise);
+        });
+    }
+}
+exports.TriggerActions = TriggerActions;
+
+
+/***/ }),
+
+/***/ 8712:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Webhook = void 0;
+const apiService_1 = __nccwpck_require__(4953);
+class Webhook extends apiService_1.APIService {
+    migrate() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.sourceWebhooks = yield this.getWebhooks();
+            if (!this.sourceWebhooks || this.sourceWebhooks.length == 0) {
+                return;
+            }
+            yield this.setTargetWebhook();
+        });
+    }
+    getWebhooks(f = this.source) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { result } = yield f.get('/webhooks');
+            return result;
+        });
+    }
+    setTargetWebhook() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const targetWebhooks = yield this.getWebhooks(this.target);
+            if (targetWebhooks) {
+                //Check if webhook already exist to delete
+                const exitedWebhooks = targetWebhooks.filter((source) => this.sourceWebhooks.some((target) => source.name === target.name));
+                const deleteExistedWebhooks = exitedWebhooks.map((webhook) => __awaiter(this, void 0, void 0, function* () {
+                    return this.target.delete(`/webhooks/${webhook.id}`);
+                }));
+                yield Promise.all(deleteExistedWebhooks);
+            }
+            // Migrate webhooks
+            const webhookPromise = this.sourceWebhooks.map((webhook) => __awaiter(this, void 0, void 0, function* () {
+                yield this.target.post(`/webhooks`, webhook);
+            }));
+            yield Promise.all(webhookPromise);
+        });
+    }
+}
+exports.Webhook = Webhook;
+
+
+/***/ }),
+
 /***/ 7393:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -38203,6 +38321,11 @@ class Fetch {
             return this.request('GET', urlPath);
         });
     }
+    delete(urlPath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('DELETE', urlPath);
+        });
+    }
     put(urlPath, body = {}, isFormData = false) {
         return __awaiter(this, void 0, void 0, function* () {
             this.isFormData = isFormData;
@@ -38226,7 +38349,7 @@ class Fetch {
     request(method, urlPath, body = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             const options = this.getRequestOptions(method, body);
-            return yield (0, node_fetch_1.default)(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json());
+            return yield (0, node_fetch_1.default)(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json()).catch(error => console.log('===No json response==='));
         });
     }
     getRequestOptions(method, body = {}) {

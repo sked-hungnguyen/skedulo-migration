@@ -10,6 +10,8 @@ import { CustomFields } from './migrationService/customFields'
 import { CustomForm } from './migrationService/customForm'
 import { JobTypes } from './migrationService/jobTypes'
 import { JobTemplates } from './migrationService/jobTemplates'
+import { Webhook } from './migrationService/webhook'
+import { TriggerActions } from './migrationService/triggerActions'
 
 dotenv.config();
 
@@ -28,7 +30,9 @@ const serviceMap : any = {
   'CustomFields': CustomFields,
   'CustomForm': CustomForm,
   'JobTypes': JobTypes,
-  'JobTemplates': JobTemplates
+  'JobTemplates': JobTemplates,
+  'Webhook': Webhook,
+  'TriggerActions': TriggerActions
 }
 
 async function migration() {

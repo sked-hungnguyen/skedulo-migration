@@ -24,6 +24,10 @@ export class Fetch {
     return this.request('GET', urlPath)
   }
 
+  async delete(urlPath: string) {
+    return this.request('DELETE', urlPath)
+  }
+
   async put(urlPath: string, body: object = {}, isFormData : boolean = false) {
     this.isFormData = isFormData
     return this.request('PUT', urlPath, body)
@@ -47,7 +51,7 @@ export class Fetch {
 
   private async request(method: string, urlPath: string, body: object = {}) {
     const options = this.getRequestOptions(method, body)
-    return await fetch(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json())
+    return await fetch(this.authorizeData.API_SERVER + urlPath, options).then(res => res.json()).catch(error => console.log('===No json response==='))
   }
 
   private getRequestOptions(method: string, body: object = {}) {
